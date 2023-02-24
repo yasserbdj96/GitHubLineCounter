@@ -1,0 +1,268 @@
+{
+  "c": {
+    "name": "C",
+    "extensions": [".c"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "c++": {
+    "name": "C++",
+    "extensions": [".cpp", ".cc", ".cxx", ".hpp", ".h", ".hh", ".hxx"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "c#": {
+    "name": "C#",
+    "extensions": [".cs"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "css": {
+    "name": "CSS",
+    "extensions": [".css"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "go": {
+    "name": "Go",
+    "extensions": [".go"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "java": {
+    "name": "Java",
+    "extensions": [".java"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "javascript": {
+    "name": "JavaScript",
+    "extensions": [".js"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "kotlin": {
+    "name": "Kotlin",
+    "extensions": [".kt", ".kts"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "lua": {
+    "name": "Lua",
+    "extensions": [".lua"],
+    "comment_regex": "\\-\\-.*$|\\/\\*.*?\\*\\/"
+  },
+  "perl": {
+    "name": "Perl",
+    "extensions": [".pl", ".pm"],
+    "comment_regex": "#.*$"
+  },
+  "php": {
+    "name": "PHP",
+    "extensions": [".php"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$|#.*$"
+  },
+  "python": {
+    "name": "Python",
+    "extensions": [".py"],
+    "comment_regex": "#.*$"
+  },
+  "ruby": {
+    "name": "Ruby",
+    "extensions": [".rb"],
+    "comment_regex": "\\/\\*.*?\\*\\/|#.*$"
+  },
+  "rust": {
+    "name": "Rust",
+    "extensions": [".rs"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "scala": {
+    "name": "Scala",
+    "extensions": [".scala"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "shell": {
+    "name": "Shell",
+    "extensions": [".sh"],
+    "comment_regex": "#.*$"
+  },
+  "swift": {
+    "name": "Swift",
+    "extensions": [".swift"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "typescript": {
+    "name": "TypeScript",
+    "extensions": [".ts"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "markdown": {
+    "name": "Markdown",
+    "extensions": [".md"],
+    "comment_regex": "<!--.*?-->"
+  },
+  "html": {
+    "name": "HTML",
+    "extensions": [".html", ".htm"],
+    "comment_regex": "<!--.*?-->"
+  },
+  "xml": {
+    "name": "XML",
+    "extensions": [".xml"],
+    "comment_regex": "<!--.*?-->"
+  },
+  "sql": {
+    "name": "SQL",
+    "extensions": [".sql"],
+    "comment_regex": "--.*$|\\/\\*.*?\\*\\/"
+  },
+  "r": {
+    "name": "R",
+    "extensions": [".r"],
+    "comment_regex": "#.*$"
+  },
+  "dart": {
+    "name": "Dart",
+    "extensions": [".dart"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "groovy": {
+    "name": "Groovy",
+    "extensions": [".groovy"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "cobol": {
+    "name": "COBOL",
+    "extensions": [".cob", ".cpy"],
+    "comment_regex": "\\*.*$"
+  },
+  "fortran": {
+    "name": "FORTRAN",
+    "extensions": [".f", ".for", ".f90"],
+    "comment_regex": "!.*$|\\/\\*.*?\\*\\/"
+  },
+  "haskell": {
+    "name": "Haskell",
+    "extensions": [".hs"],
+    "comment_regex": "--.*$|\\/\\*.*?\\*\\/"
+  },
+  "lisp": {
+    "name": "Lisp",
+    "extensions": [".lisp", ".lsp"],
+    "comment_regex": ";.*$|\\/\\*.*?\\*\\/"
+  },
+  "matlab": {
+    "name": "MATLAB",
+    "extensions": [".m"],
+    "comment_regex": "%.*$"
+  },
+  "powershell": {
+    "name": "PowerShell",
+    "extensions": [".ps1"],
+    "comment_regex": "#.*$"
+  },
+  "json": {
+    "name": "JSON",
+    "extensions": [".json"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "ino": {
+    "name": "Arduino",
+    "extensions": [".ino"],
+    "comment_regex": "\\/\\/.*$"
+  },
+  "text": {
+    "name": "Text",
+    "extensions": [".txt"],
+    "comment_regex": "^$"
+  },
+  "yaml": {
+    "name": "YAML",
+    "extensions": [".yml", ".yaml"],
+    "comment_regex": "^#.*"
+  },
+  "assembly": {
+    "name": "Assembly",
+    "extensions": [".asm", ".s"],
+    "comment_regex": ";.*$"
+  },
+  "clojure": {
+    "name": "Clojure",
+    "extensions": [".clj", ".cljc", ".cljs"],
+    "comment_regex": ";.*$|#_.*$|\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "crystal": {
+    "name": "Crystal",
+    "extensions": [".cr"],
+    "comment_regex": "\\#.*$"
+  },
+  "elixir": {
+    "name": "Elixir",
+    "extensions": [".ex", ".exs"],
+    "comment_regex": "#.*$"
+  },
+  "erlang": {
+    "name": "Erlang",
+    "extensions": [".erl"],
+    "comment_regex": "%.*$"
+  },
+  "f#": {
+    "name": "F#",
+    "extensions": [".fs", ".fsi", ".fsx"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "nim": {
+    "name": "Nim",
+    "extensions": [".nim", ".nimble"],
+    "comment_regex": "#.*$|\\/\\*.*?\\*\\/"
+  },
+  "ocaml": {
+    "name": "OCaml",
+    "extensions": [".ml", ".mli", ".mll", ".mly"],
+    "comment_regex": "\\(\\*.*?\\*\\)"
+  },
+  "pascal": {
+    "name": "Pascal",
+    "extensions": [".pas"],
+    "comment_regex": "\\{.*?\\}|\\/\\/.*$"
+  },
+  "racket": {
+    "name": "Racket",
+    "extensions": [".rkt"],
+    "comment_regex": ";.*$|#\\|.*?\\|#"
+  },
+  "reason": {
+    "name": "Reason",
+    "extensions": [".re"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "sass": {
+    "name": "Sass",
+    "extensions": [".sass", ".scss"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "smalltalk": {
+    "name": "Smalltalk",
+    "extensions": [".st"],
+    "comment_regex": "\".*$"
+  },
+  "solidity": {
+    "name": "Solidity",
+    "extensions": [".sol"],
+    "comment_regex": "\\/\\*.*?\\*\\/|\\/\\/.*$"
+  },
+  "sqlpl": {
+    "name": "SQLPL",
+    "extensions": [".sql"],
+    "comment_regex": "--.*$|\\/\\*.*?\\*\\/"
+  },
+  "verilog": {
+    "name": "Verilog",
+    "extensions": [".v"],
+    "comment_regex": "\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  "batch": {
+    "name": "Batch",
+    "extensions": [".bat", ".cmd"],
+    "comment_regex": "rem.*$"
+  },
+  "svg": {
+    "name": "SVG",
+    "extensions": [".svg"],
+    "comment_regex": "<!--.*?-->"
+  }
+}
+  
