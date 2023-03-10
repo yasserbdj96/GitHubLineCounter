@@ -33,7 +33,7 @@ jobs:
       - name: Install requirements
         run: pip install -r requirements.txt
       - name: Run main.py File
-        run: python main.py ${{ secrets.GITHUB_TOKEN }} ${{ github.actor }}
+        run: python main.py "${{ secrets.GITHUB_TOKEN }}" "${{ github.actor }}"
       - name: Update README.md
         run: |
           git add README.md
