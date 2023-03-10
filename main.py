@@ -17,6 +17,7 @@ from github import Github
 import json
 import sys
 import re
+import time
 
 def clone_repos(GITHUB_ACCESS_TOKEN,GITHUB_USERNAME):
     g = Github(GITHUB_ACCESS_TOKEN)
@@ -141,18 +142,21 @@ def main():
 
     total_files = sum(new_dict.values())
 
-    print("Language    Files    Total Lines      Code Lines       Comment Lines     Empty Lines")
-    print("-"*84)
+    all_var=""
+    all_var+="Language    Files    Total Lines      Code Lines       Comment Lines     Empty Lines"+"\n"
+    all_var+="-"*84+"\n"
 
     for lang, lines in lang_lines.items():
         total = lines['total']
         code = lines['code']
         comment = lines['comment']
         empty = lines['empty']
-        print("{:<12}{:<9}{:<17}{:<17}{:<19}{}".format(lang, new_dict[f"{lang}"], total, code, comment, empty))
+        all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format(lang, new_dict[f"{lang}"], total, code, comment, empty)+"\n"
 
-    print("-"*84)
-    print("{:<12}{:<9}{:<17}{:<17}{:<19}{}".format("TOTAL", total_files, total_lines, total_code_lines, total_comment_lines, total_empty_lines))
+    all_var+="-"*84+"\n"
+    all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format("TOTAL", total_files, total_lines, total_code_lines, total_comment_lines, total_empty_lines)+"\n"
+    return all_var
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -160,5 +164,18 @@ if __name__ == '__main__':
         exit()
     else:
         clone_repos(sys.argv[1],sys.argv[2])
-        main()
+        
+        all_var=main()
+        with open('README.md', 'w') as f:
+            # Get current date and time in seconds since the epoch
+            seconds_since_epoch = time.time()
+
+            # Format the value as a date and time string
+            date_time_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(seconds_since_epoch))
+
+            #   Print the value
+            print(date_time_string)
+            f.write(all_var)
+            f.write("\n\nLast Update: "+date_time_string)
+        print(all_var)
 #}END.

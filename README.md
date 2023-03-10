@@ -1,2 +1,25 @@
-# CodeLineCounter
-A Python tool that counts the number of lines in code files, as well as the number of empty lines and comment lines, for multiple programming languages.
+Language    Files    Total Lines      Code Lines       Comment Lines     Empty Lines
+------------------------------------------------------------------------------------
+PYTHON      250      44376            38353            3625               2398
+MARKDOWN    214      12297            9632             137                2528
+HTML        113      12328            10162            440                1726
+CSS         230      80185            76995            1061               2129
+YAML        158      4752             3306             1073               373
+PHP         393      28425            24002            2321               2102
+JAVASCRIPT  197      12839            10036            1353               1450
+TEXT        210      6577             5902             0                  675
+SHELL       126      7218             5064             1387               767
+PERL        6        165              131              9                  25
+JSON        82       21180            21161            4                  15
+BATCH       42       2026             1401             329                296
+ARDUINO     8        969              734              106                129
+C++         18       6674             5275             799                600
+TYPESCRIPT  4        218              173              2                  43
+RUBY        4        140              104              4                  32
+XML         4        39               39               0                  0
+SQL         1        40               10               22                 8
+------------------------------------------------------------------------------------
+TOTAL       2060     240448           212480           12672              15296
+
+
+Last Update: 2023-03-11 00:20:34
