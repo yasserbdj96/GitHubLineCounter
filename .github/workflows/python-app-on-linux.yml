@@ -34,10 +34,12 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run main.py File
         run: python main.py "${{ secrets.REPO_TOKEN }}" "${{ github.actor }}"
+      - name: delete repos folder
+        run: bash rm.sh
       - name: Update README.md
         run: |
-          git add -u README.md
+          git add .
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-          git commit --allow-empty -m "Update README.md"
-          git push origin main
+          git commit -am "Update Files"
+          git push
