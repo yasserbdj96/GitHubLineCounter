@@ -43,5 +43,5 @@ jobs:
           git add .
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-          git commit -am "Update Files"
-          git push https://github.com/yasserbdj96/CodeLineCounter.git HEAD:main
+          git commit --allow-empty -m "Empty-Commit"
+          git push origin main
