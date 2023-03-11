@@ -18,6 +18,7 @@ import json
 import sys
 import re
 import time
+from tabulate import tabulate
 
 def clone_repos(GITHUB_ACCESS_TOKEN,GITHUB_USERNAME):
     g = Github(GITHUB_ACCESS_TOKEN)
@@ -142,20 +143,35 @@ def main():
 
     total_files = sum(new_dict.values())
 
-    all_var=""
-    all_var+="Language    Files    Total Lines      Code Lines       Comment Lines     Empty Lines"+"\n"
-    all_var+="-"*84+"\n"
-
+    #all_var=""
+    #all_var+="Language    Files    Total Lines      Code Lines       Comment Lines     Empty Lines"+"\n"
+    #all_var+="-"*84+"\n"
+    data = []
     for lang, lines in lang_lines.items():
         total = lines['total']
         code = lines['code']
         comment = lines['comment']
         empty = lines['empty']
-        all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format(lang, new_dict[f"{lang}"], total, code, comment, empty)+"\n"
 
-    all_var+="-"*84+"\n"
-    all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format("TOTAL", total_files, total_lines, total_code_lines, total_comment_lines, total_empty_lines)+"\n"
-    return all_var
+        data.append({'Language': f'{lang}', 'Files': new_dict[f"{lang}"], 'Total Lines': total, 'Code Lines': code, 'Comment Lines': comment, 'Empty Lines': empty})
+
+
+        #all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format(lang, new_dict[f"{lang}"], total, code, comment, empty)+"\n"
+
+    #all_var+="-"*84+"\n"
+    #all_var+="{:<12}{:<9}{:<17}{:<17}{:<19}{}".format("TOTAL", total_files, total_lines, total_code_lines, total_comment_lines, total_empty_lines)
+    #data.append({'Language': 'TOTAL', 'Files': total_files, 'Total Lines': total_lines, 'Code Lines': total_code_lines, 'Comment Lines': total_comment_lines, 'Empty Lines': total_empty_lines})
+    return data
+
+def format_table(data):
+    headers = ['Language', 'Files', 'Total Lines', 'Code Lines', 'Comment Lines', 'Empty Lines']
+    table = []
+    for d in data:
+        row = [d['Language'], d['Files'], d['Total Lines'], d['Code Lines'], d['Comment Lines'], d['Empty Lines']]
+        table.append(row)
+    table.append(['TOTAL', sum(d['Files'] for d in data), sum(d['Total Lines'] for d in data),
+                  sum(d['Code Lines'] for d in data), sum(d['Comment Lines'] for d in data), sum(d['Empty Lines'] for d in data)])
+    return tabulate(table, headers, tablefmt='pipe')
 
 
 if __name__ == '__main__':
@@ -165,7 +181,7 @@ if __name__ == '__main__':
     else:
         clone_repos(sys.argv[1],sys.argv[2])
         
-        all_var=main()
+        all_var=format_table(main())
         with open('README.md', 'w') as f:
             # Get current date and time in seconds since the epoch
             seconds_since_epoch = time.time()
@@ -177,5 +193,6 @@ if __name__ == '__main__':
             print(date_time_string)
             f.write(all_var)
             f.write("\n\nLast Update: "+date_time_string)
+
         print(all_var)
 #}END.
