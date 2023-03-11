@@ -43,4 +43,3 @@ jobs:
           git add .
           git commit -am "Update Files"
           git push https://github.com/${{ github.actor }}/${{ github.repository }}.git HEAD:main
-          git push 
