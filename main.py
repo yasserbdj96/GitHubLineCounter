@@ -165,8 +165,10 @@ def main():
 
 def format_table(data):
     headers = ['Language', 'Files', 'Total Lines', 'Code Lines', 'Comment Lines', 'Empty Lines']
+    # Sort the data by Total Lines in descending order
+    sorted_data = sorted(data, key=lambda x: x['Total Lines'], reverse=True)
     table = []
-    for d in data:
+    for d in sorted_data:
         row = [d['Language'], d['Files'], d['Total Lines'], d['Code Lines'], d['Comment Lines'], d['Empty Lines']]
         table.append(row)
     table.append(['TOTAL', sum(d['Files'] for d in data), sum(d['Total Lines'] for d in data),
