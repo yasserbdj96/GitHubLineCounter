@@ -36,7 +36,7 @@ jobs:
         run: python main.py "${{ secrets.REPO_TOKEN }}" "${{ github.actor }}"
       - name: Update README.md
         run: |
-          git add README.md
+          git add -u README.md
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git commit --allow-empty -m "Update README.md"
