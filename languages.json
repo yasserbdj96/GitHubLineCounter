@@ -263,6 +263,11 @@
     "name": "SVG",
     "extensions": [".svg"],
     "comment_regex": "<!--.*?-->|\\/\\/.*$|\\/\\*.*?\\*\\/"
+  },
+  ".ini": {
+    "name": "INI",
+    "extensions": [".ini"],
+    "comment_regex": ";.*$"
   }
 }
   
