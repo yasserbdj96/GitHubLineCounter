@@ -258,6 +258,11 @@
     "name": "Batch",
     "extensions": [".bat", ".cmd"],
     "comment_regex": "rem.*$"
+  },
+  "svg": {
+    "name": "SVG",
+    "extensions": [".svg"],
+    "comment_regex": "<!--.*?-->|\\/\\/.*$|\\/\\*.*?\\*\\/"
   }
 }
   
