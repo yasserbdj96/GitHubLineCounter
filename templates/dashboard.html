@@ -1,0 +1,1032 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Code Statistics{% endblock %}
+
+{% block content %}
+<style>
+    .wakatime-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        transition: all 0.3s;
+    }
+    .wakatime-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .metric-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    .language-bar {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+    }
+    .language-bar:hover {
+        background: #f9fafb;
+    }
+    .language-bar:last-child {
+        border-bottom: none;
+    }
+    .language-icon {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 12px;
+    }
+    .language-name {
+        flex: 1;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .language-percent {
+        font-weight: 600;
+        color: #374151;
+        margin-right: 12px;
+        min-width: 50px;
+        text-align: right;
+    }
+    .language-time {
+        color: #6b7280;
+        font-size: 13px;
+        min-width: 100px;
+        text-align: right;
+    }
+    .progress-bar {
+        width: 150px;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-right: 12px;
+    }
+    .progress-fill {
+        height: 100%;
+        background: currentColor;
+        transition: width 0.5s ease;
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+    }
+    .time-filter {
+        display: flex;
+        gap: 8px;
+        background: #f3f4f6;
+        padding: 4px;
+        border-radius: 8px;
+    }
+    .time-filter button {
+        padding: 8px 16px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+    .time-filter button.active {
+        background: white;
+        color: #3b82f6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 20px;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-item {
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid #3b82f6;
+    }
+    .stat-item-value {
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: #111827;
+    }
+    .stat-item-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    .account-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    .account-badge.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .donut-chart-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .legend-item:hover {
+        background: #f3f4f6;
+    }
+    .legend-item.filtered-out {
+        opacity: 0.4;
+    }
+    .legend-item.highlighted {
+        background: #eff6ff;
+        border-left: 3px solid #3b82f6;
+    }
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    .language-legend {
+        /*max-height: 250px;*/
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db #f3f4f6;
+    }
+    .language-legend::-webkit-scrollbar {
+        width: 6px;
+    }
+    .language-legend::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 3px;
+    }
+    .language-legend::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+    .language-legend::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+    .hidden {
+        display: none;
+    }
+    #progressContainer {
+        border-left: 4px solid #3b82f6;
+    }
+    #progressBar {
+        transition: width 0.5s ease-in-out;
+    }
+</style>
+
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
+            <p class="text-gray-600 mt-2">Track your coding activity across all repositories</p>
+        </div>
+        <button onclick="analyzeAll()" class="btn-primary flex items-center gap-2">
+            <span>🔄</span>
+            <span>Refresh Stats</span>
+        </button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progressContainer" class="wakatime-card hidden">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-lg font-bold">Scanning Progress</h3>
+            <span id="progressPercentage" class="text-sm font-semibold">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+            <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="mt-2 text-sm text-gray-600">
+            <span id="progressStatus">Initializing...</span>
+            <span id="progressDetails" class="ml-2"></span>
+        </div>
+    </div>
+    
+    <!-- Connected Accounts -->
+    <div class="wakatime-card">
+        <div class="section-header">
+            <h3 class="text-lg font-bold">Connected Accounts</h3>
+        </div>
+        <div class="flex flex-wrap">
+            {% for account in accounts %}
+            <div class="account-badge {% if account.is_active %}active{% endif %}">
+                <span>{% if account.platform == 'github' %}🐙{% elif account.platform == 'gitlab' %}🦊{% endif %}</span>
+                <span>{{ account.username }}</span>
+                {% if account.is_active %}
+                <span class="text-green-600">●</span>
+                {% else %}
+                <span class="text-red-600">●</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="metric-label">Total Lines Written</div>
+            <div class="metric-value">
+                {% set total = namespace(value=0) %}
+                {% for stat in stats_today %}
+                    {% set total.value = total.value + stat.total_lines %}
+                {% endfor %}
+                {{ "{:,}".format(total.value) }}
+            </div>
+            <div class="text-sm opacity-90">Across all repositories</div>
+        </div>
+        
+        <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="metric-label">Active Languages</div>
+            <div class="metric-value">{{ stats_today|length }}</div>
+            <div class="text-sm opacity-90">Different programming languages</div>
+        </div>
+        
+        <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="metric-label">Code Lines</div>
+            <div class="metric-value">
+                {% set code_total = namespace(value=0) %}
+                {% for stat in stats_today %}
+                    {% set code_total.value = code_total.value + (stat.total_lines * 0.7)|int %}
+                {% endfor %}
+                {{ "{:,}".format(code_total.value) }}
+            </div>
+            <div class="text-sm opacity-90">Excluding comments and blanks</div>
+        </div>
+        
+        <div class="metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="metric-label">Accounts</div>
+            <div class="metric-value">
+                {% set active = namespace(count=0) %}
+                {% for acc in accounts %}
+                    {% if acc.is_active %}
+                        {% set active.count = active.count + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ active.count }}
+            </div>
+            <div class="text-sm opacity-90">Active accounts tracked</div>
+        </div>
+    </div>
+
+    <!-- Time Range Filter -->
+    <div class="wakatime-card">
+        <div class="section-header">
+            <h3 class="section-title">Coding Activity</h3>
+            <div class="time-filter">
+                <button class="active" onclick="switchTimeRange('today')">Today</button>
+                <button onclick="switchTimeRange('week')">Week</button>
+                <button onclick="switchTimeRange('month')">Month</button>
+                <button onclick="switchTimeRange('year')">Year</button>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Languages Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Languages Bar Chart -->
+        <div class="wakatime-card">
+            <div class="section-header">
+                <h3 class="section-title">Languages</h3>
+                <span class="text-sm text-gray-600">Total: {{ stats_today|length }} languages</span>
+            </div>
+            <div class="mt-4">
+                {% set total_lines = namespace(value=0) %}
+                {% for stat in stats_today %}
+                    {% set total_lines.value = total_lines.value + stat.total_lines %}
+                {% endfor %}
+                
+                {% for stat in stats_today|sort(attribute='total_lines', reverse=True) %}
+                {% set percent = ((stat.total_lines / total_lines.value * 100) if total_lines.value > 0 else 0)|round(1) %}
+                <div class="language-bar" style="color: {{ language_colors.get(stat.language, '#6b7280') }}">
+                    <div class="language-icon" style="background: currentColor;"></div>
+                    <div class="language-name">{{ stat.language }}</div>
+                    <div class="language-percent">{{ percent }}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ percent }}%; background: currentColor;"></div>
+                    </div>
+                    <div class="language-time">{{ "{:,}".format(stat.total_lines) }} lines</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Language Distribution Donut -->
+        <div class="wakatime-card">
+            <div class="section-header">
+                <h3 class="section-title">Distribution</h3>
+                <button onclick="resetLanguageFilter()" class="text-sm text-blue-600 hover:text-blue-800" id="resetFilterBtn" style="display: none;">
+                    Reset Filter
+                </button>
+            </div>
+            <div class="donut-chart-container">
+                <div style="width: 250px; height: 250px; position: relative;">
+                    <canvas id="languageDonut"></canvas>
+                </div>
+                <div class="language-legend">
+                    {% set sorted_stats = stats_today|sort(attribute='total_lines', reverse=True) %}
+                    {% for stat in sorted_stats %}
+                    <div class="legend-item" data-language="{{ stat.language }}" onclick="toggleLanguage('{{ stat.language }}')">
+                        <div class="legend-color" style="background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                        <span class="text-sm">{{ stat.language }}</span>
+                        <span class="text-xs text-gray-500 ml-2">({{ "{:,}".format(stat.total_lines) }})</span>
+                        <div class="legend-checkbox ml-2" style="display: none;">
+                            <span class="text-green-600">✓</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="wakatime-card">
+        <div class="section-header">
+            <h3 class="section-title">Detailed Statistics</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Files</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lines</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blanks</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% set total_stats = namespace(files=0, total=0, code=0, comment=0, empty=0) %}
+                    {% for stat in stats_today|sort(attribute='total_lines', reverse=True) %}
+                    {% set file_count = stat.files|default(0)|int %}
+                    {% set total_stats.files = total_stats.files + file_count %}
+                    {% set total_stats.total = total_stats.total + stat.total_lines %}
+                    {% set total_stats.code = total_stats.code + (stat.total_lines * 0.7)|int %}
+                    {% set total_stats.comment = total_stats.comment + (stat.total_lines * 0.2)|int %}
+                    {% set total_stats.empty = total_stats.empty + (stat.total_lines * 0.1)|int %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full mr-2" style="background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                                <span class="font-medium">{{ stat.language }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ file_count }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{{ "{:,}".format(stat.total_lines) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ "{:,}".format((stat.total_lines * 0.7)|int) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ "{:,}".format((stat.total_lines * 0.2)|int) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ "{:,}".format((stat.total_lines * 0.1)|int) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <img src="/api/badge/total_lines?language={{ stat.language }}" alt="Badge" class="h-5">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="bg-gray-100 font-bold">
+                        <td class="px-6 py-4 whitespace-nowrap">TOTAL</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.files) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.total) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.code) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.comment) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.empty) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <img src="/api/badge/total_lines" alt="Total Badge" class="h-5">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Weekly Activity Heatmap -->
+    <div class="wakatime-card">
+        <div class="section-header">
+            <h3 class="section-title">Activity Heatmap</h3>
+            <span class="text-sm text-gray-600">Last 7 days</span>
+        </div>
+        <div class="chart-container" style="height: 200px;">
+            <canvas id="heatmapChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="wakatime-card">
+        <div class="section-header">
+            <h3 class="section-title">Quick Statistics</h3>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item" style="border-left-color: #667eea;">
+                <div class="stat-item-value">{{ "{:,}".format(total_stats.total) }}</div>
+                <div class="stat-item-label">Total Lines</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #f093fb;">
+                <div class="stat-item-value">{{ "{:,}".format(total_stats.code) }}</div>
+                <div class="stat-item-label">Code Lines</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #4facfe;">
+                <div class="stat-item-value">{{ "{:,}".format(total_stats.comment) }}</div>
+                <div class="stat-item-label">Comment Lines</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #43e97b;">
+                <div class="stat-item-value">{{ "{:,}".format(total_stats.empty) }}</div>
+                <div class="stat-item-label">Blank Lines</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #ff6b6b;">
+                <div class="stat-item-value">{{ stats_today|length }}</div>
+                <div class="stat-item-label">Languages Used</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #51cf66;">
+                <div class="stat-item-value">{{ accounts|length }}</div>
+                <div class="stat-item-label">Accounts</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #ffd43b;">
+                <div class="stat-item-value">{{ "{:,}".format((total_stats.total / (stats_today|length if stats_today|length > 0 else 1))|int) }}</div>
+                <div class="stat-item-label">Avg Lines/Language</div>
+            </div>
+            <div class="stat-item" style="border-left-color: #9775fa;">
+                <div class="stat-item-value">
+                    {% set top_lang = stats_today|sort(attribute='total_lines', reverse=True)|first %}
+                    {{ top_lang.language if top_lang else 'N/A' }}
+                </div>
+                <div class="stat-item-label">Top Language</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const languageColors = {
+        'PYTHON': '#3572A5',
+        'JAVASCRIPT': '#f1e05a',
+        'TYPESCRIPT': '#2b7489',
+        'JAVA': '#b07219',
+        'C': '#555555',
+        'C++': '#f34b7d',
+        'C#': '#178600',
+        'PHP': '#4F5D95',
+        'RUBY': '#701516',
+        'GO': '#00ADD8',
+        'RUST': '#dea584',
+        'SWIFT': '#ffac45',
+        'KOTLIN': '#F18E33',
+        'HTML': '#e34c26',
+        'CSS': '#563d7c',
+        'SCSS': '#c6538c',
+        'SHELL': '#89e051',
+        'SQL': '#e38c00',
+        'R': '#198CE7',
+        'DART': '#00B4AB',
+        'LUA': '#000080',
+        'PERL': '#0298c3',
+        'MARKDOWN': '#083fa1',
+        'JSON': '#292929',
+        'YAML': '#cb171e',
+        'XML': '#0060ac',
+        'VUE': '#41b883',
+        'REACT': '#61dafb'
+    };
+
+    // Progress tracking
+    let progressInterval;
+    const PROGRESS_KEY = 'scanning_progress';
+
+    function initProgressBar() {
+        const progressData = localStorage.getItem(PROGRESS_KEY);
+        if (progressData) {
+            const progress = JSON.parse(progressData);
+            // Show progress bar if scan was active in the last 5 minutes
+            if (progress.isActive && (Date.now() - progress.timestamp < 300000)) {
+                showProgressBar();
+                updateProgressBar(progress.percentage, progress.status, progress.details);
+                startProgressPolling();
+            } else {
+                // Clean up old progress
+                localStorage.removeItem(PROGRESS_KEY);
+            }
+        }
+    }
+
+    function showProgressBar() {
+        const container = document.getElementById('progressContainer');
+        container.classList.remove('hidden');
+        // Scroll to progress bar
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideProgressBar() {
+        const container = document.getElementById('progressContainer');
+        container.classList.add('hidden');
+        localStorage.removeItem(PROGRESS_KEY);
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+    }
+
+    function updateProgressBar(percentage, status, details = '') {
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const progressStatus = document.getElementById('progressStatus');
+        const progressDetails = document.getElementById('progressDetails');
+
+        progressBar.style.width = percentage + '%';
+        progressPercentage.textContent = percentage + '%';
+        progressStatus.textContent = status;
+        progressDetails.textContent = details;
+
+        // Save to localStorage
+        const progressData = {
+            isActive: percentage < 100,
+            percentage: percentage,
+            status: status,
+            details: details,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
+    }
+
+    function startProgressPolling() {
+    // Clear existing interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+
+    let errorCount = 0;
+    const maxErrors = 5;
+
+    // Poll for progress updates every 2 seconds
+    progressInterval = setInterval(() => {
+        fetch('/api/scanning_progress')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                errorCount = 0; // Reset error count on successful response
+                console.log('Progress update:', data);
+                
+                if (data.isActive) {
+                    updateProgressBar(data.percentage, data.status, data.details);
+                    if (data.percentage >= 100) {
+                        // Scan completed
+                        console.log('Scan completed, waiting for final processing...');
+                        setTimeout(() => {
+                            hideProgressBar();
+                            // Refresh the page to show new data
+                            location.reload();
+                        }, 2000);
+                    }
+                } else {
+                    // Scan not active
+                    if (data.percentage > 0 && data.percentage < 100) {
+                        // Still processing but marked as inactive - wait a bit
+                        console.log('Scan marked as inactive but not complete, waiting...');
+                        updateProgressBar(data.percentage, 'Finalizing...', 'Processing completed data');
+                    } else if (data.percentage >= 100) {
+                        // Show completion briefly
+                        updateProgressBar(100, 'Analysis completed!', 'Refreshing page...');
+                        setTimeout(() => {
+                            hideProgressBar();
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        // No active scan
+                        hideProgressBar();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching progress:', error);
+                errorCount++;
+                
+                if (errorCount >= maxErrors) {
+                    // Too many errors, stop polling
+                    console.error('Too many errors, stopping progress polling');
+                    hideProgressBar();
+                    // Re-enable the button
+                    const btn = document.querySelector('button[onclick="analyzeAll()"]');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span>🔄</span><span>Refresh Stats</span>';
+                    }
+                }
+            });
+    }, 2000);
+}
+
+    function startScanning() {
+    showProgressBar();
+    updateProgressBar(5, 'Starting analysis...', 'Initializing scanning process');
+    
+    // Start progress polling immediately
+    startProgressPolling();
+    
+    // Then start the actual scan
+    fetch('/analyze_all', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.error || 'Unknown error');
+            }
+            console.log('Scan started successfully');
+            // Progress polling will handle updates
+        })
+        .catch(error => {
+            console.error('Error starting scan:', error);
+            updateProgressBar(0, 'Error starting scan', error.message);
+            setTimeout(() => {
+                hideProgressBar();
+                // Re-enable the button
+                const btn = document.querySelector('button[onclick="analyzeAll()"]');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>🔄</span><span>Refresh Stats</span>';
+                }
+            }, 5000);
+        });
+}
+
+    // Activity Chart
+    const weekData = {{ stats_week|tojson }};
+    const activityLabels = weekData.map(d => {
+        const date = new Date(d[0]);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const activityValues = weekData.map(d => d[1]);
+    
+    const activityChart = new Chart(document.getElementById('activityChart'), {
+        type: 'line',
+        data: {
+            labels: activityLabels,
+            datasets: [{
+                label: 'Lines of Code',
+                data: activityValues,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#1f2937',
+                    padding: 12,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString() + ' lines';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000) {
+                                return (value / 1000).toFixed(1) + 'k';
+                            }
+                            return value;
+                        }
+                    },
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Language Donut Chart with interactive filtering
+    let languageDonutChart;
+    let allLanguages = [];
+    let filteredLanguages = new Set();
+    let isFilterMode = false;
+
+    function initLanguageDonut() {
+        const statsToday = {{ stats_today|tojson }};
+        allLanguages = statsToday.sort((a, b) => b.total_lines - a.total_lines);
+        
+        const languageLabels = allLanguages.map(s => s.language);
+        const languageData = allLanguages.map(s => s.total_lines);
+        const languageChartColors = languageLabels.map(lang => languageColors[lang] || '#6b7280');
+
+        const ctx = document.getElementById('languageDonut').getContext('2d');
+        
+        languageDonutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: languageLabels,
+                datasets: [{
+                    data: languageData,
+                    backgroundColor: languageChartColors,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverBorderWidth: 3,
+                    hoverBorderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percent = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' + percent + '% (' + context.parsed.toLocaleString() + ' lines)';
+                            }
+                        }
+                    }
+                },
+                onClick: (evt, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const language = languageLabels[index];
+                        toggleLanguage(language);
+                    }
+                }
+            }
+        });
+    }
+
+    function toggleLanguage(language) {
+        const legendItem = document.querySelector(`.legend-item[data-language="${language}"]`);
+        const checkbox = legendItem.querySelector('.legend-checkbox');
+        
+        if (filteredLanguages.has(language)) {
+            // Remove from filter
+            filteredLanguages.delete(language);
+            legendItem.classList.remove('filtered-out', 'highlighted');
+            checkbox.style.display = 'none';
+        } else {
+            // Add to filter
+            filteredLanguages.add(language);
+            legendItem.classList.add('highlighted');
+            checkbox.style.display = 'inline';
+        }
+        
+        // Update filter mode
+        isFilterMode = filteredLanguages.size > 0;
+        const resetBtn = document.getElementById('resetFilterBtn');
+        resetBtn.style.display = isFilterMode ? 'block' : 'none';
+        
+        updateChartData();
+    }
+
+    function resetLanguageFilter() {
+        filteredLanguages.clear();
+        isFilterMode = false;
+        
+        // Reset all legend items
+        document.querySelectorAll('.legend-item').forEach(item => {
+            item.classList.remove('filtered-out', 'highlighted');
+            item.querySelector('.legend-checkbox').style.display = 'none';
+        });
+        
+        document.getElementById('resetFilterBtn').style.display = 'none';
+        updateChartData();
+    }
+
+    function updateChartData() {
+        if (!languageDonutChart) return;
+        
+        let filteredData;
+        let filteredLabels;
+        let filteredColors;
+        
+        if (isFilterMode && filteredLanguages.size > 0) {
+            // Show only filtered languages
+            filteredData = allLanguages
+                .filter(lang => filteredLanguages.has(lang.language))
+                .map(lang => lang.total_lines);
+            
+            filteredLabels = allLanguages
+                .filter(lang => filteredLanguages.has(lang.language))
+                .map(lang => lang.language);
+            
+            filteredColors = filteredLabels.map(lang => languageColors[lang] || '#6b7280');
+            
+            // Update legend items
+            document.querySelectorAll('.legend-item').forEach(item => {
+                const lang = item.dataset.language;
+                if (filteredLanguages.has(lang)) {
+                    item.classList.remove('filtered-out');
+                } else {
+                    item.classList.add('filtered-out');
+                }
+            });
+        } else {
+            // Show all languages
+            filteredData = allLanguages.map(lang => lang.total_lines);
+            filteredLabels = allLanguages.map(lang => lang.language);
+            filteredColors = filteredLabels.map(lang => languageColors[lang] || '#6b7280');
+            
+            // Reset all legend items
+            document.querySelectorAll('.legend-item').forEach(item => {
+                item.classList.remove('filtered-out');
+            });
+        }
+        
+        languageDonutChart.data.labels = filteredLabels;
+        languageDonutChart.data.datasets[0].data = filteredData;
+        languageDonutChart.data.datasets[0].backgroundColor = filteredColors;
+        languageDonutChart.update();
+    }
+
+    // Heatmap Chart
+    new Chart(document.getElementById('heatmapChart'), {
+        type: 'bar',
+        data: {
+            labels: activityLabels,
+            datasets: [{
+                label: 'Activity',
+                data: activityValues,
+                backgroundColor: activityValues.map(val => {
+                    const max = Math.max(...activityValues);
+                    const opacity = val / max;
+                    return `rgba(102, 126, 234, ${opacity})`;
+                }),
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString() + ' lines';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000) {
+                                return (value / 1000).toFixed(1) + 'k';
+                            }
+                            return value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    function switchTimeRange(range) {
+        // Remove active class from all buttons
+        document.querySelectorAll('.time-filter button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+        
+        // Update chart based on range
+        let data, labels;
+        if (range === 'week') {
+            data = {{ stats_week|tojson }};
+        } else if (range === 'month') {
+            data = {{ stats_month|tojson }};
+        } else if (range === 'year') {
+            data = {{ stats_year|tojson }};
+        } else {
+            data = [[new Date().toISOString().split('T')[0], {{ total_stats.total }}]];
+        }
+        
+        labels = data.map(d => {
+            const date = new Date(d[0]);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        
+        activityChart.data.labels = labels;
+        activityChart.data.datasets[0].data = data.map(d => d[1]);
+        activityChart.update();
+    }
+    
+    function analyzeAll() {
+        if (confirm('Start analysis for all accounts? This may take a while.')) {
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span><span>Analyzing...</span>';
+            
+            // Start the scanning process with progress tracking
+            startScanning();
+        }
+    }
+
+    // Initialize everything when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initLanguageDonut();
+        initProgressBar();
+    });
+</script>
+{% endblock %}

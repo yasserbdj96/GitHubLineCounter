@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Code Statistics{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: #1f2937;
+            padding: 20px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .nav-link {
+            color: #9ca3af;
+            display: block;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background: #374151;
+            color: #fff;
+        }
+        .nav-link.active {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="sidebar">
+        <h1 class="text-white text-2xl font-bold mb-8">Code Stats</h1>
+        <nav>
+            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                🏠 Home
+            </a>
+            <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
+                📊 Dashboard
+            </a>
+            <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">
+                ⚙️ Settings
+            </a>
+        </nav>
+    </div>
+    
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
