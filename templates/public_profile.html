@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} - CodeStats</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .language-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .language-bar:last-child {
+            border-bottom: none;
+        }
+        .progress-bar {
+            width: 150px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-purple-600">📊 CodeStats</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if current_user.is_authenticated %}
+                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600">Dashboard</a>
+                        <a href="/logout" class="text-gray-700 hover:text-purple-600">Logout</a>
+                    {% else %}
+                        <a href="/login" class="text-gray-700 hover:text-purple-600">Login</a>
+                        <a href="/register" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="gradient-bg text-white py-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-6">
+                <div class="w-24 h-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-3xl font-bold">
+                    {{ profile_user.username[0].upper() }}
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold">{{ profile_user.username }}</h1>
+                    <p class="text-xl text-purple-100 mt-2">
+                        {% if profile_user.full_name %}{{ profile_user.full_name }} • {% endif %}
+                        Coding Statistics
+                    </p>
+                    {% if profile_user.bio %}
+                    <p class="text-purple-100 mt-3 max-w-2xl">{{ profile_user.bio }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-gray-900">{{ "{:,}".format(total_stats.total) }}</div>
+                <div class="text-sm text-gray-600 mt-1">Total Lines</div>
+            </div>
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-gray-900">{{ "{:,}".format(total_stats.files) }}</div>
+                <div class="text-sm text-gray-600 mt-1">Files</div>
+            </div>
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-gray-900">{{ stats_data|length }}</div>
+                <div class="text-sm text-gray-600 mt-1">Languages</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Language Distribution -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-bold mb-4">Language Distribution</h3>
+                <div style="height: 300px;">
+                    <canvas id="languageChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Chart -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-bold mb-4">Coding Activity (30 days)</h3>
+                <div style="height: 300px;">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Languages List -->
+        <div class="bg-white rounded-lg p-6 shadow-sm mt-8">
+            <h3 class="text-lg font-bold mb-4">Languages</h3>
+            {% set total_lines = namespace(value=0) %}
+            {% for stat in stats_data %}
+                {% set total_lines.value = total_lines.value + stat.total_lines %}
+            {% endfor %}
+            
+            <div class="space-y-2">
+                {% for stat in stats_data|sort(attribute='total_lines', reverse=True) %}
+                {% set percent = ((stat.total_lines / total_lines.value * 100) if total_lines.value > 0 else 0)|round(1) %}
+                <div class="language-bar">
+                    <div class="w-4 h-4 rounded-full mr-3" style="background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                    <div class="flex-1 font-medium">{{ stat.language }}</div>
+                    <div class="text-sm text-gray-600 mr-4 w-16 text-right">{{ percent }}%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ percent }}%; background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                    </div>
+                    <div class="text-sm text-gray-600 w-32 text-right">{{ "{:,}".format(stat.total_lines) }} lines</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Badge Example -->
+        <div class="bg-white rounded-lg p-6 shadow-sm mt-8">
+            <h3 class="text-lg font-bold mb-4">Share Your Stats</h3>
+            <p class="text-gray-600 mb-4">Embed these badges in your README:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="font-mono text-sm mb-2">Total Lines</div>
+                    <img src="/api/badge/total_lines?user={{ profile_user.username }}&color=08C" alt="Total Lines">
+                    <code class="text-xs mt-2 block">
+                        ![CodeStats]({{ request.url_root }}api/badge/total_lines?user={{ profile_user.username }})
+                    </code>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="font-mono text-sm mb-2">Files</div>
+                    <img src="/api/badge/files?user={{ profile_user.username }}&color=08C" alt="Files">
+                    <code class="text-xs mt-2 block">
+                        ![CodeStats]({{ request.url_root }}api/badge/files?user={{ profile_user.username }})
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const languageColors = {{ language_colors|tojson }};
+        const activityData = {{ activity_data|tojson }};
+        const statsData = {{ stats_data|tojson }};
+
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: activityData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [{
+                    label: 'Lines of Code',
+                    data: activityData.map(d => d.total_lines),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Language Distribution Chart
+        const langCtx = document.getElementById('languageChart').getContext('2d');
+        const sortedStats = statsData.sort((a, b) => b.total_lines - a.total_lines);
+        const languageChart = new Chart(langCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sortedStats.map(s => s.language),
+                datasets: [{
+                    data: sortedStats.map(s => s.total_lines),
+                    backgroundColor: sortedStats.map(s => languageColors[s.language] || '#6b7280'),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

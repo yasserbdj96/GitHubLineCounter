@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - CodeStats</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Left Side - Form -->
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div>
+                    <a href="/" class="flex items-center justify-center">
+                        <span class="text-3xl font-bold text-purple-600">📊 CodeStats</span>
+                    </a>
+                    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Create your account
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Already have an account?
+                        <a href="/login" class="font-medium text-purple-600 hover:text-purple-500">
+                            Sign in
+                        </a>
+                    </p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="rounded-md p-4 {% if category == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+                            <p class="text-sm">{{ message }}</p>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form class="mt-8 space-y-6" action="/register" method="POST">
+                    <div class="rounded-md shadow-sm space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                                Username
+                            </label>
+                            <input id="username" name="username" type="text" required 
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your username">
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                                Email Address
+                            </label>
+                            <input id="email" name="email" type="email" required 
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your email">
+                        </div>
+
+                        <div>
+                            <label for="full_name" class="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name (Optional)
+                            </label>
+                            <input id="full_name" name="full_name" type="text"
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your full name">
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                Password
+                            </label>
+                            <input id="password" name="password" type="password" required minlength="6"
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your password (min. 6 characters)">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input id="agree_terms" name="agree_terms" type="checkbox" required
+                               class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                        <label for="agree_terms" class="ml-2 block text-sm text-gray-900">
+                            I agree to the 
+                            <a href="#" class="text-purple-600 hover:text-purple-500">Terms of Service</a>
+                            and 
+                            <a href="#" class="text-purple-600 hover:text-purple-500">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn-primary group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side - Image/Pattern -->
+        <div class="hidden lg:block lg:flex-1 gradient-bg relative">
+            <div class="absolute inset-0 flex items-center justify-center p-12">
+                <div class="text-white text-center">
+                    <h2 class="text-4xl font-bold mb-4">Start Tracking Today</h2>
+                    <p class="text-xl text-purple-100 mb-8">
+                        Join thousands of developers tracking their coding activity
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">10M+</div>
+                            <div class="text-sm">Lines Analyzed</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">50+</div>
+                            <div class="text-sm">Languages</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">Real-time</div>
+                            <div class="text-sm">Updates</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">Custom</div>
+                            <div class="text-sm">API</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Features List -->
+                    <div class="mt-12 text-left max-w-md mx-auto">
+                        <h3 class="text-xl font-bold mb-4">What you'll get:</h3>
+                        <ul class="space-y-3 text-purple-100">
+                            <li class="flex items-center">
+                                <span class="mr-3">✓</span>
+                                <span>Multi-platform code analysis</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="mr-3">✓</span>
+                                <span>Beautiful dashboards and charts</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="mr-3">✓</span>
+                                <span>Smart caching for fast results</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="mr-3">✓</span>
+                                <span>Custom API endpoints</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="mr-3">✓</span>
+                                <span>Real-time progress tracking</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CodeStats</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: #1f2937;
+            padding: 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 250px;
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover {
+            background: #374151;
+            color: #fff;
+            border-left-color: #667eea;
+        }
+        .nav-link.active {
+            background: #374151;
+            color: #fff;
+            border-left-color: #667eea;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .metric-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .language-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .language-bar:last-child {
+            border-bottom: none;
+        }
+        .progress-bar {
+            width: 150px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .period-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .period-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .period-btn:hover:not(.active) {
+            background: #e5e7eb;
+        }
+        .user-menu {
+            position: relative;
+        }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+            margin-top: 8px;
+            z-index: 50;
+        }
+        .user-menu:hover .user-dropdown {
+            display: block;
+        }
+        .user-dropdown a {
+            display: block;
+            padding: 12px 16px;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        .user-dropdown a:hover {
+            background: #f3f4f6;
+        }
+        #progressContainer {
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="p-6">
+            <h1 class="text-white text-2xl font-bold">📊 CodeStats</h1>
+        </div>
+        <nav>
+            <a href="/dashboard" class="nav-link active">
+                <span class="mr-3">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/profile" class="nav-link">
+                <span class="mr-3">👤</span>
+                <span>Profile</span>
+            </a>
+            <a href="/settings" class="nav-link">
+                <span class="mr-3">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                    {{ user.username[0].upper() }}
+                </div>
+                <div class="flex-1">
+                    <div class="text-white text-sm font-medium">{{ user.username }}</div>
+                    <div class="text-gray-400 text-xs">{{ user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <p class="text-gray-600 text-sm">Track your coding activity</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="refreshStats(false)" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center">
+                    <span class="mr-2">🔄</span>
+                    <span>Quick Sync</span>
+                </button>
+                <button onclick="refreshStats(true)" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                    <span class="mr-2">⚡</span>
+                    <span>Full Scan</span>
+                </button>
+                <div class="user-menu">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold cursor-pointer">
+                        {{ user.username[0].upper() }}
+                    </div>
+                    <div class="user-dropdown">
+                        <a href="/profile">Profile</a>
+                        <a href="/settings">Settings</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-8">
+            <!-- Progress Bar -->
+            <div id="progressContainer" class="bg-white rounded-lg p-6 mb-6 hidden">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-bold">Scanning Progress</h3>
+                    <span id="progressPercentage" class="text-sm font-semibold">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="mt-2 text-sm text-gray-600">
+                    <span id="progressStatus">Initializing...</span>
+                    <span id="progressDetails" class="ml-2"></span>
+                </div>
+            </div>
+
+            <!-- Period Selector -->
+            <div class="flex space-x-2 mb-6">
+                <button class="period-btn {% if period == 'today' %}active{% endif %}" onclick="changePeriod('today')">Today</button>
+                <button class="period-btn {% if period == 'week' %}active{% endif %}" onclick="changePeriod('week')">Week</button>
+                <button class="period-btn {% if period == 'month' %}active{% endif %}" onclick="changePeriod('month')">Month</button>
+                <button class="period-btn {% if period == 'year' %}active{% endif %}" onclick="changePeriod('year')">Year</button>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card">
+                    <div class="text-sm text-gray-600 mb-2">Total Lines</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ "{:,}".format(total_stats.total) }}</div>
+                    <div class="text-xs text-green-600 mt-2">↑ All repositories</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-sm text-gray-600 mb-2">Code Lines</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ "{:,}".format(total_stats.code) }}</div>
+                    <div class="text-xs text-green-600 mt-2">↑ {{ ((total_stats.code / total_stats.total * 100) if total_stats.total > 0 else 0)|round(1) }}% of total</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-sm text-gray-600 mb-2">Languages</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ stats_data|length }}</div>
+                    <div class="text-xs text-green-600 mt-2">↑ Active languages</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-sm text-gray-600 mb-2">Files</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ "{:,}".format(total_stats.files) }}</div>
+                    <div class="text-xs text-green-600 mt-2">↑ Tracked files</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Activity Chart -->
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Coding Activity</h3>
+                    <div style="height: 300px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Language Distribution -->
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Language Distribution</h3>
+                    <div style="height: 300px;">
+                        <canvas id="languageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Languages Table -->
+            <div class="bg-white rounded-lg p-6 shadow-sm mb-8">
+                <h3 class="text-lg font-bold mb-4">Languages</h3>
+                {% set total_lines = namespace(value=0) %}
+                {% for stat in stats_data %}
+                    {% set total_lines.value = total_lines.value + stat.total_lines %}
+                {% endfor %}
+                
+                <div class="space-y-2">
+                    {% for stat in stats_data|sort(attribute='total_lines', reverse=True) %}
+                    {% set percent = ((stat.total_lines / total_lines.value * 100) if total_lines.value > 0 else 0)|round(1) %}
+                    <div class="language-bar">
+                        <div class="w-4 h-4 rounded-full mr-3" style="background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                        <div class="flex-1 font-medium">{{ stat.language }}</div>
+                        <div class="text-sm text-gray-600 mr-4 w-16 text-right">{{ percent }}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ percent }}%; background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                        </div>
+                        <div class="text-sm text-gray-600 w-32 text-right">{{ "{:,}".format(stat.total_lines) }} lines</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Detailed Stats Table -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-bold mb-4">Detailed Statistics</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Files</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Lines</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comments</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blanks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for stat in stats_data|sort(attribute='total_lines', reverse=True) %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full mr-2" style="background: {{ language_colors.get(stat.language, '#6b7280') }};"></div>
+                                        <span class="font-medium">{{ stat.language }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(stat.files) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-semibold">{{ "{:,}".format(stat.total_lines) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(stat.code_lines) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(stat.comment_lines) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(stat.empty_lines) }}</td>
+                            </tr>
+                            {% endfor %}
+                            <!-- Total Row -->
+                            <tr class="bg-gray-50 font-bold border-t-2 border-gray-300">
+                                <td class="px-6 py-4 whitespace-nowrap">TOTAL</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.files) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.total) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.code) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.comment) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ "{:,}".format(total_stats.empty) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const languageColors = {{ language_colors|tojson }};
+        const activityData = {{ activity_data|tojson }};
+        const statsData = {{ stats_data|tojson }};
+        
+        // Check if we should show progress bar from session storage
+        function checkProgressBarState() {
+            const showProgress = sessionStorage.getItem('showProgressBar');
+            if (showProgress === 'true') {
+                showProgressBar();
+                startProgressPolling();
+            }
+        }
+        
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: activityData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [{
+                    label: 'Lines of Code',
+                    data: activityData.map(d => d.total_lines),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Language Distribution Chart
+        const langCtx = document.getElementById('languageChart').getContext('2d');
+        const sortedStats = statsData.sort((a, b) => b.total_lines - a.total_lines);
+        const languageChart = new Chart(langCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sortedStats.map(s => s.language),
+                datasets: [{
+                    data: sortedStats.map(s => s.total_lines),
+                    backgroundColor: sortedStats.map(s => languageColors[s.language] || '#6b7280'),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+
+        function changePeriod(period) {
+            window.location.href = `/dashboard?period=${period}`;
+        }
+
+        let progressInterval;
+
+        function refreshStats(force) {
+            showProgressBar();
+            sessionStorage.setItem('showProgressBar', 'true');
+            
+            fetch('/analyze_all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ force: force })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    startProgressPolling();
+                } else {
+                    hideProgressBar();
+                    sessionStorage.removeItem('showProgressBar');
+                }
+            })
+            .catch(error => {
+                hideProgressBar();
+                sessionStorage.removeItem('showProgressBar');
+            });
+        }
+
+        function showProgressBar() {
+            document.getElementById('progressContainer').classList.remove('hidden');
+        }
+
+        function hideProgressBar() {
+            document.getElementById('progressContainer').classList.add('hidden');
+            sessionStorage.removeItem('showProgressBar');
+        }
+
+        function updateProgressBar(percentage, status, details) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressPercentage').textContent = percentage + '%';
+            document.getElementById('progressStatus').textContent = status;
+            document.getElementById('progressDetails').textContent = details;
+        }
+
+        function startProgressPolling() {
+            if (progressInterval) clearInterval(progressInterval);
+            
+            progressInterval = setInterval(() => {
+                fetch('/api/scanning_progress')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.is_active) {
+                            updateProgressBar(data.percentage, data.status, data.details);
+                            if (data.percentage >= 100) {
+                                setTimeout(() => {
+                                    hideProgressBar();
+                                    location.reload();
+                                }, 2000);
+                            }
+                        } else if (data.percentage >= 100) {
+                            updateProgressBar(100, 'Completed!', 'Refreshing...');
+                            setTimeout(() => {
+                                hideProgressBar();
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            // If not active and not completed, hide after a delay
+                            setTimeout(() => {
+                                hideProgressBar();
+                            }, 3000);
+                        }
+                    })
+                    .catch(() => {
+                        // If there's an error, hide progress bar
+                        setTimeout(() => {
+                            hideProgressBar();
+                        }, 3000);
+                    });
+            }, 2000);
+        }
+
+        // Check progress bar state on page load
+        document.addEventListener('DOMContentLoaded', checkProgressBarState);
+    </script>
+</body>
+</html>

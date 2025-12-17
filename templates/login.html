@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CodeStats</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Left Side - Form -->
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div>
+                    <a href="/" class="flex items-center justify-center">
+                        <span class="text-3xl font-bold text-purple-600">📊 CodeStats</span>
+                    </a>
+                    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Welcome back
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Don't have an account?
+                        <a href="/register" class="font-medium text-purple-600 hover:text-purple-500">
+                            Sign up for free
+                        </a>
+                    </p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="rounded-md p-4 {% if category == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+                            <p class="text-sm">{{ message }}</p>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form class="mt-8 space-y-6" action="/login" method="POST">
+                    <div class="rounded-md shadow-sm space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                                Username
+                            </label>
+                            <input id="username" name="username" type="text" required 
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your username">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                Password
+                            </label>
+                            <input id="password" name="password" type="password" required 
+                                   class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                                   placeholder="Enter your password">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember" name="remember" type="checkbox" 
+                                   class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="remember" class="ml-2 block text-sm text-gray-900">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <div class="text-sm">
+                            <a href="#" class="font-medium text-purple-600 hover:text-purple-500">
+                                Forgot password?
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn-primary group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition">
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side - Image/Pattern -->
+        <div class="hidden lg:block lg:flex-1 gradient-bg relative">
+            <div class="absolute inset-0 flex items-center justify-center p-12">
+                <div class="text-white text-center">
+                    <h2 class="text-4xl font-bold mb-4">Track Your Progress</h2>
+                    <p class="text-xl text-purple-100 mb-8">
+                        Comprehensive code statistics across all your repositories
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">10M+</div>
+                            <div class="text-sm">Lines Analyzed</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">50+</div>
+                            <div class="text-sm">Languages</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">Real-time</div>
+                            <div class="text-sm">Updates</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4">
+                            <div class="text-3xl font-bold">Custom</div>
+                            <div class="text-sm">API</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

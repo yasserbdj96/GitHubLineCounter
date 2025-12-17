@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - CodeStats</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: #1f2937;
+            padding: 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 250px;
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover {
+            background: #374151;
+            color: #fff;
+            border-left-color: #667eea;
+        }
+        .nav-link.active {
+            background: #374151;
+            color: #fff;
+            border-left-color: #667eea;
+        }
+        .account-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+        .account-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="p-6">
+            <h1 class="text-white text-2xl font-bold">📊 CodeStats</h1>
+        </div>
+        <nav>
+            <a href="/dashboard" class="nav-link">
+                <span class="mr-3">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/profile" class="nav-link">
+                <span class="mr-3">👤</span>
+                <span>Profile</span>
+            </a>
+            <a href="/settings" class="nav-link active">
+                <span class="mr-3">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                    {{ user.username[0].upper() }}
+                </div>
+                <div class="flex-1">
+                    <div class="text-white text-sm font-medium">{{ user.username }}</div>
+                    <div class="text-gray-400 text-xs">{{ user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm px-8 py-4">
+            <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
+            <p class="text-gray-600 text-sm">Manage your accounts and integrations</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-8 max-w-6xl">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="mb-6 rounded-lg p-4 {% if category == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Auto Update Settings -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-bold mb-4">Auto Update Settings</h3>
+                <form method="POST" action="/settings">
+                    <input type="hidden" name="action" value="update_interval">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Update Interval (hours)</label>
+                            <input type="number" name="interval" value="{{ interval }}" min="1" max="168" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <p class="text-xs text-gray-500 mt-1">Automatic analysis will run every X hours</p>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                Save Interval
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add New Account -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-bold mb-4">Add New Account</h3>
+                <form method="POST" action="/settings">
+                    <input type="hidden" name="action" value="add_account">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                            <select name="platform" id="platform" onchange="toggleBaseUrl()"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="github">GitHub</option>
+                                <option value="gitlab">GitLab</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <input type="text" name="username" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="your-username">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
+                            <input type="password" name="access_token" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="ghp_xxxxxxxxxxxx or glpat-xxxxxxxxxxxx">
+                            <p class="text-xs text-gray-500 mt-1">
+                                <a href="https://github.com/settings/tokens" target="_blank" class="text-purple-600 hover:underline">Generate GitHub Token</a> | 
+                                <a href="https://gitlab.com/-/profile/personal_access_tokens" target="_blank" class="text-purple-600 hover:underline">Generate GitLab Token</a>
+                            </p>
+                        </div>
+
+                        <div class="md:col-span-2" id="baseUrlDiv" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Base URL (for self-hosted GitLab)</label>
+                            <input type="url" name="base_url"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="https://gitlab.example.com">
+                            <p class="text-xs text-gray-500 mt-1">Leave empty for gitlab.com</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                            Add Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Connected Accounts -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-bold mb-4">Connected Accounts</h3>
+                {% if accounts %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for account in accounts %}
+                    <div class="account-card rounded-lg p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-3xl">
+                                    {% if account.platform == 'github' %}🐙{% elif account.platform == 'gitlab' %}🦊{% endif %}
+                                </span>
+                                <div>
+                                    <div class="font-bold text-lg">{{ account.username }}</div>
+                                    <div class="text-sm text-gray-600">{{ account.platform|upper }}</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-xs rounded-full {% if account.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 mb-3">
+                            Added: {{ account.created_at.strftime('%b %d, %Y') }}
+                            {% if account.last_sync %}
+                            <br>Last sync: {{ account.last_sync.strftime('%b %d, %Y %I:%M %p') }}
+                            {% endif %}
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button onclick="toggleAccount({{ account.id }})" 
+                                    class="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition">
+                                {% if account.is_active %}Disable{% else %}Enable{% endif %}
+                            </button>
+                            <button onclick="deleteAccount({{ account.id }})" 
+                                    class="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12 text-gray-500">
+                    <div class="text-5xl mb-4">🔗</div>
+                    <p class="text-lg">No accounts connected yet</p>
+                    <p class="text-sm">Add your first account above to start tracking!</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Custom API Endpoints -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">Custom API Endpoints</h3>
+                    <button onclick="showCreateEndpoint()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm">
+                        + New Endpoint
+                    </button>
+                </div>
+                
+                <!-- Create/Edit Form -->
+                <div id="endpointForm" class="hidden mb-6 p-4 bg-purple-50 rounded-lg">
+                    <h4 class="font-bold mb-4">Create Custom Endpoint</h4>
+                    <form onsubmit="saveEndpoint(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input type="text" name="name" required
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Path</label>
+                                <input type="text" name="path" required
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                       placeholder="my-endpoint">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Method</label>
+                                <select name="method" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select name="is_active" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                                <select name="is_public" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="false">Private</option>
+                                    <option value="true">Public</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea name="description" rows="2"
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SQL Query</label>
+                            <textarea name="query" rows="4" required
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                                      placeholder="SELECT * FROM statistics WHERE language = '{{language}}'"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Use {{parameter}} for dynamic values</p>
+                        </div>
+
+                        <input type="hidden" name="endpoint_id" id="endpoint_id">
+                        <div class="flex space-x-2">
+                            <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                Save Endpoint
+                            </button>
+                            <button type="button" onclick="cancelEndpoint()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Endpoints List -->
+                <div id="endpointsList"></div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-bold mb-4">API Documentation</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="font-bold mb-2">Get Statistics</div>
+                        <code class="text-sm bg-white px-3 py-1 rounded">GET /api/stats?period=week&language=python</code>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="font-bold mb-2">Generate Badge</div>
+                        <code class="text-sm bg-white px-3 py-1 rounded">GET /api/badge/total_lines?user={{ user.username }}&language=python</code>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="font-bold mb-2">Custom Endpoint</div>
+                        <code class="text-sm bg-white px-3 py-1 rounded">GET /api/custom/{{ user.username }}/your-endpoint</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleBaseUrl() {
+            const platform = document.getElementById('platform').value;
+            const baseUrlDiv = document.getElementById('baseUrlDiv');
+            baseUrlDiv.style.display = platform === 'gitlab' ? 'block' : 'none';
+        }
+
+        function toggleAccount(accountId) {
+            if (confirm('Toggle account status?')) {
+                fetch(`/toggle_account/${accountId}`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function deleteAccount(accountId) {
+            if (confirm('Are you sure you want to delete this account?')) {
+                fetch(`/delete_account/${accountId}`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function showCreateEndpoint() {
+            document.getElementById('endpointForm').classList.remove('hidden');
+            document.querySelector('[name="endpoint_id"]').value = '';
+        }
+
+        function cancelEndpoint() {
+            document.getElementById('endpointForm').classList.add('hidden');
+            document.querySelector('form').reset();
+        }
+
+        function saveEndpoint(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                path: formData.get('path'),
+                method: formData.get('method'),
+                description: formData.get('description'),
+                query: formData.get('query'),
+                is_active: formData.get('is_active') === 'true',
+                is_public: formData.get('is_public') === 'true'
+            };
+
+            const endpointId = formData.get('endpoint_id');
+            const url = '/api/custom';
+            const method = endpointId ? 'PUT' : 'POST';
+
+            if (endpointId) data.id = parseInt(endpointId);
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Endpoint saved!');
+                    cancelEndpoint();
+                    loadEndpoints();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            });
+        }
+
+        function loadEndpoints() {
+            fetch('/api/custom')
+                .then(res => res.json())
+                .then(endpoints => {
+                    const container = document.getElementById('endpointsList');
+                    if (endpoints.length === 0) {
+                        container.innerHTML = '<div class="text-center py-8 text-gray-500">No custom endpoints yet</div>';
+                        return;
+                    }
+
+                    container.innerHTML = endpoints.map(ep => `
+                        <div class="border rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="px-2 py-1 text-xs font-bold bg-blue-100 text-blue-800 rounded">${ep.method}</span>
+                                    <span class="ml-2 font-mono text-sm">/api/custom/{{ user.username }}/${ep.path}</span>
+                                    <span class="ml-2 px-2 py-1 text-xs rounded ${ep.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                        ${ep.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                    <span class="ml-2 px-2 py-1 text-xs rounded ${ep.is_public ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                                        ${ep.is_public ? 'Public' : 'Private'}
+                                    </span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="deleteEndpoint(${ep.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                                </div>
+                            </div>
+                            <h4 class="font-bold">${ep.name}</h4>
+                            <p class="text-sm text-gray-600 mb-2">${ep.description || 'No description'}</p>
+                            <div class="bg-gray-100 p-2 rounded text-xs font-mono overflow-x-auto">
+                                ${ep.query}
+                            </div>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function deleteEndpoint(id) {
+            if (confirm('Delete this endpoint?')) {
+                fetch(`/api/custom?id=${id}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) {
+                            loadEndpoints();
+                        }
+                    });
+            }
+        }
+
+        // Load endpoints on page load
+        document.addEventListener('DOMContentLoaded', loadEndpoints);
+    </script>
+</body>
+</html>
